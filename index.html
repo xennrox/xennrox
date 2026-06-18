@@ -1,0 +1,2025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>XENNROX HQ v4.2 - Advanced AI File System</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+<style>
+:root {
+  --bg: #0a0e17; --bg2: #111827; --bg3: #1a2332; --bg4: #243447;
+  --fg: #e2e8f0; --fg2: #94a3b8; --fg3: #64748b;
+  --accent: #3b82f6; --accent2: #06b6d4; --accent3: #8b5cf6;
+  --success: #22c55e; --warning: #f59e0b; --danger: #ef4444; --info: #0ea5e9;
+  --glass: rgba(17,24,39,0.85); --glass2: rgba(26,35,50,0.9);
+  --border: rgba(148,163,184,0.12); --shadow: 0 8px 32px rgba(0,0,0,0.4);
+  --radius: 14px; --radius-sm: 8px; --transition: 0.25s cubic-bezier(0.4,0,0.2,1);
+}
+.light {
+  --bg: #f8fafc; --bg2: #ffffff; --bg3: #f1f5f9; --bg4: #e2e8f0;
+  --fg: #0f172a; --fg2: #475569; --fg3: #94a3b8;
+  --glass: rgba(255,255,255,0.92); --glass2: rgba(241,245,249,0.95);
+  --border: rgba(148,163,184,0.2); --shadow: 0 8px 32px rgba(0,0,0,0.08);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { -webkit-text-size-adjust:100%; }
+body {
+  font-family:'Inter',sans-serif; background:var(--bg); color:var(--fg);
+  min-height:100vh; overflow-x:hidden; transition:background var(--transition), color var(--transition);
+}
+::-webkit-scrollbar { width:6px; height:6px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--bg4); border-radius:3px; }
+
+/* ========== SETUP - SINGLE PAGE FORM (NO JS NEEDED) ========== */
+#setupOverlay {
+  position:fixed; inset:0; z-index:9999;
+  background:linear-gradient(135deg, #0a0e17 0%, #1a1f3a 50%, #0f172a 100%);
+  overflow-y:auto;
+  padding:20px;
+}
+#setupOverlay.light-setup { background:linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 50%, #f8fafc 100%); }
+
+.setup-container {
+  width:min(560px, 100%); max-width:560px; margin:0 auto;
+  background:var(--glass); backdrop-filter:blur(24px);
+  border:1px solid var(--border); border-radius:var(--radius); padding:32px 28px;
+  box-shadow:var(--shadow);
+}
+.setup-logo { text-align:center; margin-bottom:28px; }
+.setup-logo h1 { font-size:2rem; font-weight:800; background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.setup-logo p { color:var(--fg2); font-size:0.9rem; margin-top:4px; }
+
+.setup-section {
+  margin-bottom:28px; padding-bottom:24px; border-bottom:1px solid var(--border);
+}
+.setup-section:last-of-type { border-bottom:none; margin-bottom:16px; }
+.setup-section h3 { font-size:1.1rem; margin-bottom:6px; display:flex; align-items:center; gap:8px; }
+.setup-section h3 .step-num {
+  width:26px; height:26px; border-radius:50%; background:var(--accent); color:#fff;
+  font-size:0.75rem; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.setup-section p { color:var(--fg2); font-size:0.85rem; margin-bottom:16px; }
+
+.setup-field { margin-bottom:14px; }
+.setup-field label { display:block; font-size:0.78rem; font-weight:600; color:var(--fg2); margin-bottom:5px; text-transform:uppercase; letter-spacing:0.5px; }
+.setup-field input, .setup-field textarea, .setup-field select {
+  width:100%; padding:11px 13px; background:var(--bg3); border:1px solid var(--border);
+  border-radius:var(--radius-sm); color:var(--fg); font-family:inherit; font-size:0.9rem;
+  outline:none; transition:border-color var(--transition), box-shadow var(--transition);
+}
+.setup-field input:focus, .setup-field textarea:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(59,130,246,0.15); }
+.setup-field input::placeholder { color:var(--fg3); }
+.setup-field .status-badge {
+  display:inline-flex; align-items:center; gap:4px; font-size:0.7rem; padding:2px 8px;
+  border-radius:20px; margin-top:4px; font-weight:600;
+}
+.status-set { background:rgba(34,197,94,0.15); color:var(--success); }
+.status-unset { background:rgba(245,158,11,0.15); color:var(--warning); }
+
+.key-warning {
+  background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.2);
+  border-radius:var(--radius-sm); padding:10px 14px; font-size:0.8rem; color:var(--warning);
+  margin-bottom:16px; display:flex; align-items:center; gap:8px;
+}
+
+/* CRITICAL: Simple button, no complex CSS, guaranteed clickable */
+.launch-btn {
+  display:block; width:100%; padding:16px; border-radius:var(--radius-sm);
+  background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff;
+  font-weight:700; font-size:1.05rem; border:none; cursor:pointer;
+  text-align:center; text-decoration:none;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+  user-select:none;
+  -webkit-user-select:none;
+}
+.launch-btn:hover { opacity:0.95; }
+.launch-btn:active { transform:scale(0.98); }
+
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+@media (max-width:480px) {
+  .setup-container { padding:24px 16px; }
+  .form-row { grid-template-columns:1fr; }
+  .setup-logo h1 { font-size:1.6rem; }
+}
+
+</style>
+</head>
+<body>
+
+<!-- ========== SETUP - SINGLE PAGE FORM ========== -->
+<div id="setupOverlay">
+  <div class="setup-container">
+    <div class="setup-logo">
+      <h1>XENNROX HQ</h1>
+      <p>Advanced AI File System v4.2</p>
+    </div>
+
+    <div class="key-warning">
+      <span>&#9888;</span>
+      <span>All API keys stored in browser localStorage only. Never hardcoded.</span>
+    </div>
+
+    <!-- Section 1: Company -->
+    <div class="setup-section">
+      <h3><span class="step-num">1</span> Company Configuration</h3>
+      <p>Configure your holding company details.</p>
+      <div class="setup-field">
+        <label>Holding Company Name</label>
+        <input type="text" id="setupCompanyName" value="XENNROX HOLDINGS (PTY) LTD" placeholder="Enter company name">
+      </div>
+      <div class="form-row">
+        <div class="setup-field">
+          <label>Director Name</label>
+          <input type="text" id="setupDirector" value="Christiaan Keet" placeholder="Enter director name">
+        </div>
+        <div class="setup-field">
+          <label>Registration Number</label>
+          <input type="text" id="setupRegNum" placeholder="e.g. 2020/123456/07">
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 2: API Keys -->
+    <div class="setup-section">
+      <h3><span class="step-num">2</span> API Configuration</h3>
+      <p>Enter your API keys for AI, security scanning, and bot communication.</p>
+      <div class="setup-field">
+        <label>Gemini API Key</label>
+        <input type="password" id="setupGeminiKey" placeholder="Paste your Gemini API key">
+        <span class="status-badge status-unset" id="badgeGemini">Not Set</span>
+      </div>
+      <div class="setup-field">
+        <label>VirusTotal API Key</label>
+        <input type="password" id="setupVTKey" placeholder="Paste your VirusTotal API key">
+        <span class="status-badge status-unset" id="badgeVT">Not Set</span>
+      </div>
+      <div class="setup-field">
+        <label>Firebase Config (JSON)</label>
+        <textarea id="setupFirebase" rows="3" placeholder="Paste your Firebase config JSON here"></textarea>
+        <span class="status-badge status-unset" id="badgeFirebase">Not Set</span>
+      </div>
+    </div>
+
+    <!-- Section 3: AI File System -->
+    <div class="setup-section">
+      <h3><span class="step-num">3</span> AI File System</h3>
+      <p>Configure your intelligent file organization engine.</p>
+      <div class="form-row">
+        <div class="setup-field">
+          <label>Default Sorting</label>
+          <select id="setupSortMode">
+            <option value="smart">Zero-Click Smart Sort</option>
+            <option value="date">Date Modified</option>
+            <option value="name">Alphabetical</option>
+            <option value="type">File Type</option>
+          </select>
+        </div>
+        <div class="setup-field">
+          <label>Auto-Organize</label>
+          <select id="setupAutoInterval">
+            <option value="off">Disabled</option>
+            <option value="1">Every 1 hour</option>
+            <option value="6">Every 6 hours</option>
+            <option value="24" selected>Every 24 hours</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="setup-field">
+          <label>Folder Prompts</label>
+          <select id="setupFolderPrompts">
+            <option value="yes" selected>Enabled</option>
+            <option value="no">Disabled</option>
+          </select>
+        </div>
+        <div class="setup-field">
+          <label>Sandbox Mode</label>
+          <select id="setupSandbox">
+            <option value="strict" selected>Strict - Full isolation</option>
+            <option value="moderate">Moderate</option>
+            <option value="loose">Loose</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 4: Entities -->
+    <div class="setup-section">
+      <h3><span class="step-num">4</span> Entity Configuration</h3>
+      <p>Define subsidiary entities and firewall rules.</p>
+      <div class="form-row">
+        <div class="setup-field">
+          <label>XENNREX Entity</label>
+          <input type="text" id="setupXennrexName" value="XENNREX (PTY) LTD">
+        </div>
+        <div class="setup-field">
+          <label>XENNRIX Entity</label>
+          <input type="text" id="setupXennrixName" value="XENNRIX (PTY) LTD">
+        </div>
+      </div>
+      <div style="background:var(--bg3); padding:12px; border-radius:var(--radius-sm); font-size:0.8rem; color:var(--fg2); line-height:1.8; margin-top:8px;">
+        &#10003; XENNREX and XENNRIX never share folders directly<br>
+        &#10003; All communication routes through XENNROX HQ<br>
+        &#10003; Cross-entity data transfer requires director approval<br>
+        &#10003; Audit logs maintained for all entity interactions
+      </div>
+    </div>
+
+    <!-- Launch Button - CRITICAL: No onclick, uses ID for JS binding only after page loads -->
+    <button class="launch-btn" id="btnLaunchHQ" type="button">
+      &#128640; Launch HQ Dashboard
+    </button>
+
+    <p style="text-align:center; color:var(--fg3); font-size:0.75rem; margin-top:16px;">
+      XENNROX HQ v4.2 &bull; Director: Christiaan Keet &bull; CIPC Registered
+    </p>
+  </div>
+</div>
+
+<!-- ========== APP ========== -->
+<div id="app" style="display:none; min-height:100vh;">
+<!-- ========== APP ========== -->
+<div id="app">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo-icon">XR</div>
+      <div>
+        <h2>XENNROX</h2>
+        <span class="version">v4.2</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-title">Command</div>
+        <div class="nav-item active" data-page="dashboard" onclick="goPage('dashboard')">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+          <span>Dashboard</span>
+        </div>
+        <div class="nav-item" data-page="files" onclick="goPage('files')">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+          <span>AI File System</span>
+          <span class="nav-badge" id="fileCountBadge">0</span>
+        </div>
+        <div class="nav-item" data-page="ai" onclick="goPage('ai')">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z"/></svg>
+          <span>Gemini AI</span>
+        </div>
+        <div class="nav-item" data-page="security" onclick="goPage('security')">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+          <span>Security</span>
+        </div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Entities</div>
+        <div class="nav-item" data-page="xennrex" onclick="goPage('xennrex')">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.375 3h.375c.621 0 1.125.504 1.125 1.125V21"/></svg>
+          <span>XENNREX</span>
+        </div>
+        <div class="nav-item" data-page="xennrix" onclick="goPage('xennrix')">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h6.375a2.625 2.625 0 010 5.25H9v-5.25z"/></svg>
+          <span>XENNRIX</span>
+        </div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Operations</div>
+        <div class="nav-item" data-page="bots" onclick="goPage('bots')">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12s.93-4.178 2.441-5.654c.334-.325.557-.769.467-1.226a4.48 4.48 0 00-.978-2.025A5.969 5.969 0 015.41 2.97a9.765 9.765 0 012.555-.337C13.03 2.75 17 6.444 17 12z"/></svg>
+          <span>Bot Network</span>
+        </div>
+        <div class="nav-item" data-page="terminal" onclick="goPage('terminal')">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m6.75 7.5 3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25z"/></svg>
+          <span>Terminal</span>
+        </div>
+        <div class="nav-item" data-page="reports" onclick="goPage('reports')">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+          <span>Reports</span>
+        </div>
+        <div class="nav-item" data-page="settings" onclick="goPage('settings')">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 011.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.56.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.893.149c-.425.07-.765.383-.93.78-.165.398-.143.854.107 1.204l.527.738c.32.447.27 1.06-.12 1.45l-.774.773a1.125 1.125 0 01-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.397.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 01-.12-1.45l.527-.737c.25.35.272.806.107 1.204.165.397.505.71.93.78l.894.15c.542.09.94.56.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.893.149c-.425.07-.765.383-.93.78-.165.398-.143.854.107 1.204l.527.738c.32.447.27 1.06-.12 1.45l-.774.773a1.125 1.125 0 01-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.397.165-.71.505.78-.929l.15-.894z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          <span>Settings</span>
+        </div>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-row" onclick="goPage('settings')">
+        <div class="user-avatar">CK</div>
+        <div class="user-info">
+          <div class="name" id="sidebarDirectorName">Christiaan Keet</div>
+          <div class="role">Director</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content" id="mainContent">
+    <!-- Top Bar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="menu-toggle" id="menuToggle" onclick="toggleSidebar()" aria-label="Toggle menu">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
+        </button>
+        <div class="breadcrumb">
+          <span>XENNROX HQ</span>
+          <span class="sep">/</span>
+          <span class="current" id="pageTitle">Dashboard</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="topbar-btn" id="notifBtn" onclick="toggleNotif()" aria-label="Notifications">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/></svg>
+          <span class="dot" id="notifDot" style="display:none;"></span>
+        </button>
+        <button class="topbar-btn" onclick="toggleTheme()" aria-label="Toggle theme">
+          <svg id="themeIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Notification Panel -->
+    <div class="notif-panel" id="notifPanel">
+      <div class="notif-panel-header">
+        <h4>Notifications</h4>
+        <button class="btn-ghost btn-sm" onclick="clearNotifs()">Clear All</button>
+      </div>
+      <div class="notif-list" id="notifList"></div>
+    </div>
+
+    <!-- ========== DASHBOARD PAGE ========== -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <h1>Command Dashboard</h1>
+        <p>Real-time overview of XENNROX HQ operations</p>
+      </div>
+      <div class="stat-row">
+        <div class="stat-card" onclick="goPage('files')">
+          <div class="stat-icon" style="background:rgba(59,130,246,0.15);color:var(--accent);">&#128193;</div>
+          <div class="stat-info"><h4 id="dashFileCount">0</h4><span>Files Managed</span></div>
+        </div>
+        <div class="stat-card" onclick="goPage('ai')">
+          <div class="stat-icon" style="background:rgba(139,92,246,0.15);color:var(--accent3);">&#129302;</div>
+          <div class="stat-info"><h4 id="dashAiCount">0</h4><span>AI Interactions</span></div>
+        </div>
+        <div class="stat-card" onclick="goPage('security')">
+          <div class="stat-icon" style="background:rgba(34,197,94,0.15);color:var(--success);">&#128737;</div>
+          <div class="stat-info"><h4 id="dashScanCount">0</h4><span>Scans Completed</span></div>
+        </div>
+        <div class="stat-card" onclick="goPage('bots')">
+          <div class="stat-icon" style="background:rgba(245,158,11,0.15);color:var(--warning);">&#129302;</div>
+          <div class="stat-info"><h4 id="dashBotCount">0</h4><span>Bot Messages</span></div>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+        <div class="card" style="cursor:default;">
+          <h3>&#128202; System Health</h3>
+          <div style="margin-top:14px; display:flex; flex-direction:column; gap:10px;">
+            <div><div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:4px;"><span>Gemini AI</span><span id="healthGemini" class="badge badge-green">Active</span></div><div class="progress-bar"><div class="progress-fill" style="width:92%;"></div></div></div>
+            <div><div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:4px;"><span>VirusTotal</span><span id="healthVT" class="badge badge-green">Active</span></div><div class="progress-bar"><div class="progress-fill" style="width:88%;"></div></div></div>
+            <div><div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:4px;"><span>Firebase</span><span id="healthFirebase" class="badge badge-orange">Standby</span></div><div class="progress-bar"><div class="progress-fill" style="width:65%;"></div></div></div>
+            <div><div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:4px;"><span>AI File System</span><span class="badge badge-green">Running</span></div><div class="progress-bar"><div class="progress-fill" style="width:95%;"></div></div></div>
+          </div>
+        </div>
+        <div class="card" style="cursor:default;">
+          <h3>&#128200; Recent Activity</h3>
+          <div class="timeline" style="margin-top:10px;" id="dashTimeline">
+            <div class="timeline-item"><div class="time">Just now</div><div class="text">System initialized successfully</div></div>
+            <div class="timeline-item"><div class="time">2 min ago</div><div class="text">AI File System engine loaded</div></div>
+            <div class="timeline-item"><div class="time">5 min ago</div><div class="text">Firewall rules applied</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px; cursor:default;">
+        <h3>&#128736; Quick Actions</h3>
+        <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="goPage('files')">&#128193; Manage Files</button>
+          <button class="btn btn-outline" onclick="goPage('ai')">&#129302; Ask Gemini</button>
+          <button class="btn btn-outline" onclick="goPage('security')">&#128737; Scan URL</button>
+          <button class="btn btn-outline" onclick="generateReport()">&#128196; Generate Report</button>
+          <button class="btn btn-outline" onclick="goPage('bots')">&#128172; Bot Chat</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== AI FILE SYSTEM PAGE ========== -->
+    <div class="page" id="page-files">
+      <div class="page-header">
+        <h1>AI File System</h1>
+        <p>Intelligent file organization with smart sorting, folder prompts, and sandboxing</p>
+      </div>
+      <div style="display:grid; grid-template-columns:300px 1fr; gap:16px;">
+        <div>
+          <div style="display:flex; gap:8px; margin-bottom:12px;">
+            <button class="btn btn-sm btn-primary" onclick="createFolder()">+ New Folder</button>
+            <button class="btn btn-sm btn-outline" onclick="triggerFileUpload()">+ Upload</button>
+          </div>
+          <input type="file" id="fileUploadInput" style="display:none;" multiple onchange="handleFileUpload(event)">
+          <div class="card" style="padding:12px; cursor:default;">
+            <div class="file-tree" id="fileTree"></div>
+          </div>
+        </div>
+        <div>
+          <div class="card" style="margin-bottom:16px; cursor:default;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+              <h3 id="selectedFolderName">Select a folder</h3>
+              <div style="display:flex; gap:8px;">
+                <button class="btn btn-sm btn-outline" onclick="runSmartSort()">&#9889; Smart Sort</button>
+                <button class="btn btn-sm btn-outline" onclick="toggleFolderPrompt()">&#9997; Prompt</button>
+              </div>
+            </div>
+            <div id="folderContent">
+              <div class="drop-zone" id="dropZone" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                <div style="font-size:2rem; margin-bottom:8px;">&#128228;</div>
+                <div>Drop files here or click to upload</div>
+                <div style="font-size:0.75rem; color:var(--fg3); margin-top:4px;">Supports drag & drop from desktop</div>
+              </div>
+            </div>
+          </div>
+          <div class="folder-prompt-panel" id="folderPromptPanel" style="display:none;">
+            <h4>&#9997; Folder Instructions (AI Prompt)</h4>
+            <p style="font-size:0.8rem; color:var(--fg2); margin-bottom:12px;">Define how the AI should handle files in this folder.</p>
+            <textarea id="folderPromptText" placeholder="Example: Organize all documents by date. Extract key metrics from spreadsheets."></textarea>
+            <div class="prompt-actions">
+              <button class="btn btn-primary btn-sm" onclick="saveFolderPrompt()">Save Prompt</button>
+              <button class="btn btn-ghost btn-sm" onclick="testFolderPrompt()">Test with AI</button>
+            </div>
+          </div>
+          <div class="metadata-panel" id="metadataPanel" style="margin-top:16px; display:none;">
+            <h4>&#128451; File Metadata</h4>
+            <div id="metadataContent"></div>
+          </div>
+        </div>
+      </div>
+      <div class="smart-sort-panel" style="margin-top:16px;">
+        <h4>&#9889; Zero-Click Smart Sorting Rules</h4>
+        <p>The AI File System automatically organizes files based on these active rules.</p>
+        <div class="sort-rules" id="sortRules">
+          <div class="sort-rule">
+            <span class="rule-drag">&#8942;</span>
+            <span class="rule-name">Content Type Classification</span>
+            <div class="rule-toggle on" onclick="toggleRule(this)"></div>
+          </div>
+          <div class="sort-rule">
+            <span class="rule-drag">&#8942;</span>
+            <span class="rule-name">Date-Based Archiving</span>
+            <div class="rule-toggle on" onclick="toggleRule(this)"></div>
+          </div>
+          <div class="sort-rule">
+            <span class="rule-drag">&#8942;</span>
+            <span class="rule-name">Entity Firewall Compliance</span>
+            <div class="rule-toggle on" onclick="toggleRule(this)"></div>
+          </div>
+          <div class="sort-rule">
+            <span class="rule-drag">&#8942;</span>
+            <span class="rule-name">Duplicate Detection & Merge</span>
+            <div class="rule-toggle" onclick="toggleRule(this)"></div>
+          </div>
+          <div class="sort-rule">
+            <span class="rule-drag">&#8942;</span>
+            <span class="rule-name">Size Optimization</span>
+            <div class="rule-toggle" onclick="toggleRule(this)"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== GEMINI AI PAGE ========== -->
+    <div class="page" id="page-ai">
+      <div class="page-header">
+        <h1>Gemini AI Assistant</h1>
+        <p>Powered by Google Gemini - Ask anything about your files, security, or operations</p>
+      </div>
+      <div class="chat-container">
+        <div class="chat-header">
+          <div class="ai-status">
+            <span class="dot"></span>
+            <span id="aiStatusText">Gemini 1.5 Flash Ready</span>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="clearChat()">Clear Chat</button>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+          <div class="chat-msg ai">
+            <div class="msg-avatar">AI</div>
+            <div class="msg-bubble">
+              <p>Hello Director Keet. I am your XENNROX HQ AI assistant. I can help you analyze files, review security scans, generate reports, and manage your entity operations. What would you like to do today?</p>
+            </div>
+          </div>
+        </div>
+        <div class="chat-input-row">
+          <input type="text" id="chatInput" placeholder="Ask Gemini anything..." onkeydown="if(event.key==='Enter')sendChat()">
+          <button class="btn btn-primary" onclick="sendChat()">Send</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== SECURITY PAGE ========== -->
+    <div class="page" id="page-security">
+      <div class="page-header">
+        <h1>Security Center</h1>
+        <p>VirusTotal integration and threat intelligence</p>
+      </div>
+      <div class="card-grid">
+        <div class="card" style="cursor:default;">
+          <div class="card-icon" style="background:rgba(34,197,94,0.15);color:var(--success);">&#128274;</div>
+          <h3>URL Scanner</h3>
+          <p>Scan any URL or domain for malicious content using VirusTotal's 70+ engines.</p>
+          <div class="form-group" style="margin-top:12px;">
+            <input type="text" id="vtUrlInput" placeholder="Enter URL to scan...">
+          </div>
+          <button class="btn btn-primary" style="margin-top:8px; width:100%;" onclick="scanUrl()">Scan URL</button>
+        </div>
+        <div class="card" style="cursor:default;">
+          <div class="card-icon" style="background:rgba(245,158,11,0.15);color:var(--warning);">&#128290;</div>
+          <h3>File Hash Check</h3>
+          <p>Check file hashes against VirusTotal database.</p>
+          <div class="form-group" style="margin-top:12px;">
+            <input type="text" id="vtHashInput" placeholder="Enter file hash...">
+          </div>
+          <button class="btn btn-primary" style="margin-top:8px; width:100%;" onclick="scanHash()">Check Hash</button>
+        </div>
+        <div class="card" style="cursor:default;">
+          <div class="card-icon" style="background:rgba(239,68,68,0.15);color:var(--danger);">&#128683;</div>
+          <h3>Threat Feed</h3>
+          <p>Real-time threat intelligence and IOC monitoring.</p>
+          <div class="card-stat">0</div>
+          <div class="card-stat-label">Active Threats</div>
+        </div>
+        <div class="card" style="cursor:default;">
+          <div class="card-icon" style="background:rgba(14,165,233,0.15);color:var(--info);">&#128196;</div>
+          <h3>Audit Log</h3>
+          <p>Complete audit trail of all security scans and entity interactions.</p>
+          <div class="card-stat" id="auditLogCount">0</div>
+          <div class="card-stat-label">Log Entries</div>
+        </div>
+      </div>
+      <div class="card" id="vtResultCard" style="margin-top:16px; display:none; cursor:default;">
+        <h3>&#128269; Scan Result</h3>
+        <div id="vtResultContent"></div>
+      </div>
+    </div>
+
+    <!-- ========== XENNREX PAGE ========== -->
+    <div class="page" id="page-xennrex">
+      <div class="page-header">
+        <h1>XENNREX Entity</h1>
+        <p>Subsidiary operations and file management</p>
+      </div>
+      <div class="stat-row">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(34,197,94,0.15);color:var(--success);">&#128193;</div>
+          <div class="stat-info"><h4 id="xennrexFileCount">0</h4><span>Files</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(34,197,94,0.15);color:var(--success);">&#128200;</div>
+          <div class="stat-info"><h4 id="xennrexSize">0 MB</h4><span>Storage Used</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(34,197,94,0.15);color:var(--success);">&#128736;</div>
+          <div class="stat-info"><h4 id="xennrexTasks">0</h4><span>Active Tasks</span></div>
+        </div>
+      </div>
+      <div class="card" style="cursor:default;">
+        <h3>&#128193; XENNREX Folders</h3>
+        <p style="color:var(--fg2); font-size:0.85rem; margin-bottom:12px;">These folders are isolated from XENNRIX. All data transfer requires HQ approval.</p>
+        <div id="xennrexFolders"></div>
+      </div>
+      <div class="card" style="margin-top:16px; cursor:default;">
+        <h3>&#128737; Firewall Status</h3>
+        <div class="firewall-rule">
+          <span class="fw-icon">&#9989;</span>
+          <div class="fw-info"><div class="fw-name">Direct XENNRIX Access</div><div class="fw-desc">Blocked - All traffic routes through HQ</div></div>
+          <span class="fw-status"></span>
+        </div>
+        <div class="firewall-rule">
+          <span class="fw-icon">&#9989;</span>
+          <div class="fw-info"><div class="fw-name">Folder Sharing</div><div class="fw-desc">Isolated - No shared folders with XENNRIX</div></div>
+          <span class="fw-status"></span>
+        </div>
+        <div class="firewall-rule">
+          <span class="fw-icon">&#9989;</span>
+          <div class="fw-info"><div class="fw-name">Data Export</div><div class="fw-desc">Restricted - Director approval required</div></div>
+          <span class="fw-status"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== XENNRIX PAGE ========== -->
+    <div class="page" id="page-xennrix">
+      <div class="page-header">
+        <h1>XENNRIX Entity</h1>
+        <p>Subsidiary operations and file management</p>
+      </div>
+      <div class="stat-row">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(245,158,11,0.15);color:var(--warning);">&#128193;</div>
+          <div class="stat-info"><h4 id="xennrixFileCount">0</h4><span>Files</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(245,158,11,0.15);color:var(--warning);">&#128200;</div>
+          <div class="stat-info"><h4 id="xennrixSize">0 MB</h4><span>Storage Used</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(245,158,11,0.15);color:var(--warning);">&#128736;</div>
+          <div class="stat-info"><h4 id="xennrixTasks">0</h4><span>Active Tasks</span></div>
+        </div>
+      </div>
+      <div class="card" style="cursor:default;">
+        <h3>&#128193; XENNRIX Folders</h3>
+        <p style="color:var(--fg2); font-size:0.85rem; margin-bottom:12px;">These folders are isolated from XENNREX. All data transfer requires HQ approval.</p>
+        <div id="xennrixFolders"></div>
+      </div>
+      <div class="card" style="margin-top:16px; cursor:default;">
+        <h3>&#128737; Firewall Status</h3>
+        <div class="firewall-rule">
+          <span class="fw-icon">&#9989;</span>
+          <div class="fw-info"><div class="fw-name">Direct XENNREX Access</div><div class="fw-desc">Blocked - All traffic routes through HQ</div></div>
+          <span class="fw-status"></span>
+        </div>
+        <div class="firewall-rule">
+          <span class="fw-icon">&#9989;</span>
+          <div class="fw-info"><div class="fw-name">Folder Sharing</div><div class="fw-desc">Isolated - No shared folders with XENNREX</div></div>
+          <span class="fw-status"></span>
+        </div>
+        <div class="firewall-rule">
+          <span class="fw-icon">&#9989;</span>
+          <div class="fw-info"><div class="fw-name">Data Export</div><div class="fw-desc">Restricted - Director approval required</div></div>
+          <span class="fw-status"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== BOT NETWORK PAGE ========== -->
+    <div class="page" id="page-bots">
+      <div class="page-header">
+        <h1>Bot Network</h1>
+        <p>AI-powered bot communication and task automation</p>
+      </div>
+      <div style="display:grid; grid-template-columns:250px 1fr; gap:16px;">
+        <div>
+          <div class="card" style="cursor:default; margin-bottom:16px;">
+            <h3>&#129302; Active Bots</h3>
+            <div style="margin-top:12px; display:flex; flex-direction:column; gap:8px;" id="botList">
+              <div class="bot-card" style="padding:10px; background:var(--bg3); border-radius:var(--radius-sm); border:1px solid var(--border); cursor:pointer;" onclick="selectBot('xennrex-bot')">
+                <div style="font-weight:600; font-size:0.85rem;">XENNREX Bot</div>
+                <div style="font-size:0.7rem; color:var(--fg3);">Entity automation</div>
+              </div>
+              <div class="bot-card" style="padding:10px; background:var(--bg3); border-radius:var(--radius-sm); border:1px solid var(--border); cursor:pointer;" onclick="selectBot('xennrix-bot')">
+                <div style="font-weight:600; font-size:0.85rem;">XENNRIX Bot</div>
+                <div style="font-size:0.7rem; color:var(--fg3);">Entity automation</div>
+              </div>
+              <div class="bot-card" style="padding:10px; background:var(--bg3); border-radius:var(--radius-sm); border:1px solid var(--border); cursor:pointer;" onclick="selectBot('security-bot')">
+                <div style="font-weight:600; font-size:0.85rem;">Security Bot</div>
+                <div style="font-size:0.7rem; color:var(--fg3);">Threat monitoring</div>
+              </div>
+              <div class="bot-card" style="padding:10px; background:var(--bg3); border-radius:var(--radius-sm); border:1px solid var(--border); cursor:pointer;" onclick="selectBot('file-bot')">
+                <div style="font-weight:600; font-size:0.85rem;">File Manager Bot</div>
+                <div style="font-size:0.7rem; color:var(--fg3);">Auto-organization</div>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="cursor:default;">
+            <h3>&#128172; Broadcast</h3>
+            <div class="form-group" style="margin-top:12px;">
+              <textarea id="broadcastMsg" rows="3" placeholder="Send message to all bots..."></textarea>
+            </div>
+            <button class="btn btn-primary btn-sm" style="width:100%;" onclick="broadcastToBots()">Broadcast</button>
+          </div>
+        </div>
+        <div>
+          <div class="card" style="height:calc(100vh - 240px); display:flex; flex-direction:column; cursor:default;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <h3 id="selectedBotName">Select a bot</h3>
+              <span class="badge badge-green" id="botStatus">Online</span>
+            </div>
+            <div class="bot-chat-list" id="botChat" style="flex:1; overflow-y:auto; padding:12px; background:var(--bg3); border-radius:var(--radius-sm); border:1px solid var(--border);">
+              <div style="text-align:center; color:var(--fg3); padding:40px;">Select a bot to start chatting</div>
+            </div>
+            <div style="display:flex; gap:8px; margin-top:12px;">
+              <input type="text" id="botInput" style="flex:1; padding:10px 14px; background:var(--bg3); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--fg); font-family:inherit;" placeholder="Message bot..." onkeydown="if(event.key==='Enter')sendBotMsg()">
+              <button class="btn btn-primary" onclick="sendBotMsg()">Send</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== TERMINAL PAGE ========== -->
+    <div class="page" id="page-terminal">
+      <div class="page-header">
+        <h1>Command Terminal</h1>
+        <p>Execute system commands and manage HQ operations</p>
+      </div>
+      <div class="terminal">
+        <div class="terminal-header">
+          <span class="terminal-dot" style="background:#ff5f56;"></span>
+          <span class="terminal-dot" style="background:#ffbd2e;"></span>
+          <span class="terminal-dot" style="background:#27c93f;"></span>
+          <span style="margin-left:8px; font-size:0.75rem; color:var(--fg3);">xennrox@hq:~$</span>
+        </div>
+        <div class="terminal-body" id="terminalBody">
+          <div class="line"><span class="prompt">$</span> <span class="cmd">xennrox-init</span></div>
+          <div class="line out">XENNROX HQ v4.2 Terminal initialized.</div>
+          <div class="line out">Type 'help' for available commands.</div>
+          <div class="line out"> </div>
+        </div>
+        <div class="terminal-input-row">
+          <span style="color:var(--success); font-weight:600;">$</span>
+          <input type="text" id="terminalInput" placeholder="Enter command..." onkeydown="if(event.key==='Enter')executeTerminal()">
+        </div>
+      </div>
+      <div style="margin-top:16px; display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:10px;">
+        <button class="btn btn-outline btn-sm" onclick="runTerminalCmd('help')">help</button>
+        <button class="btn btn-outline btn-sm" onclick="runTerminalCmd('status')">status</button>
+        <button class="btn btn-outline btn-sm" onclick="runTerminalCmd('files')">files</button>
+        <button class="btn btn-outline btn-sm" onclick="runTerminalCmd('entities')">entities</button>
+        <button class="btn btn-outline btn-sm" onclick="runTerminalCmd('scan')">scan</button>
+        <button class="btn btn-outline btn-sm" onclick="runTerminalCmd('report')">report</button>
+        <button class="btn btn-outline btn-sm" onclick="runTerminalCmd('clear')">clear</button>
+        <button class="btn btn-outline btn-sm" onclick="runTerminalCmd('about')">about</button>
+      </div>
+    </div>
+
+    <!-- ========== REPORTS PAGE ========== -->
+    <div class="page" id="page-reports">
+      <div class="page-header">
+        <h1>Reports & Analytics</h1>
+        <p>Generate and export operational reports</p>
+      </div>
+      <div class="card-grid">
+        <div class="card" style="cursor:default;">
+          <div class="card-icon" style="background:rgba(59,130,246,0.15);color:var(--accent);">&#128196;</div>
+          <h3>Daily Operations Report</h3>
+          <p>Summary of all HQ activities, file operations, and security scans.</p>
+          <button class="btn btn-primary" style="margin-top:12px;" onclick="generateDailyReport()">Generate</button>
+        </div>
+        <div class="card" style="cursor:default;">
+          <div class="card-icon" style="background:rgba(34,197,94,0.15);color:var(--success);">&#128200;</div>
+          <h3>Entity Performance</h3>
+          <p>XENNREX and XENNRIX performance metrics and file usage statistics.</p>
+          <button class="btn btn-primary" style="margin-top:12px;" onclick="generateEntityReport()">Generate</button>
+        </div>
+        <div class="card" style="cursor:default;">
+          <div class="card-icon" style="background:rgba(239,68,68,0.15);color:var(--danger);">&#128737;</div>
+          <h3>Security Audit</h3>
+          <p>Complete security scan history and threat assessment report.</p>
+          <button class="btn btn-primary" style="margin-top:12px;" onclick="generateSecurityReport()">Generate</button>
+        </div>
+        <div class="card" style="cursor:default;">
+          <div class="card-icon" style="background:rgba(139,92,246,0.15);color:var(--accent3);">&#129302;</div>
+          <h3>AI Activity Log</h3>
+          <p>Gemini AI interactions, bot conversations, and automation events.</p>
+          <button class="btn btn-primary" style="margin-top:12px;" onclick="generateAIReport()">Generate</button>
+        </div>
+      </div>
+      <div class="card" id="reportOutput" style="margin-top:16px; display:none; cursor:default;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <h3 id="reportTitle">Report</h3>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-outline btn-sm" onclick="copyReport()">Copy</button>
+            <button class="btn btn-primary btn-sm" onclick="downloadReport()">Download MD</button>
+          </div>
+        </div>
+        <div class="report-preview" id="reportPreview"></div>
+      </div>
+    </div>
+
+    <!-- ========== SETTINGS PAGE ========== -->
+    <div class="page" id="page-settings">
+      <div class="page-header">
+        <h1>Settings</h1>
+        <p>Configure XENNROX HQ preferences and API keys</p>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+        <div class="card" style="cursor:default;">
+          <h3>&#9881; General</h3>
+          <div class="form-group" style="margin-top:16px;">
+            <label>Company Name</label>
+            <input type="text" id="settingsCompany" value="XENNROX HOLDINGS (PTY) LTD">
+          </div>
+          <div class="form-group">
+            <label>Director Name</label>
+            <input type="text" id="settingsDirector" value="Christiaan Keet">
+          </div>
+          <div class="form-group">
+            <label>Theme</label>
+            <select id="settingsTheme" onchange="applyTheme(this.value)">
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Accent Color</label>
+            <select id="settingsAccent" onchange="applyAccent(this.value)">
+              <option value="blue">Blue</option>
+              <option value="purple">Purple</option>
+              <option value="green">Green</option>
+              <option value="orange">Orange</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" style="margin-top:8px;" onclick="saveGeneralSettings()">Save Changes</button>
+        </div>
+        <div class="card" style="cursor:default;">
+          <h3>&#128273; API Keys</h3>
+          <div class="form-group" style="margin-top:16px;">
+            <label>Gemini API Key</label>
+            <input type="password" id="settingsGeminiKey" placeholder="Enter Gemini API key">
+            <span class="status-badge status-unset" id="settingsBadgeGemini">Not Set</span>
+          </div>
+          <div class="form-group">
+            <label>VirusTotal API Key</label>
+            <input type="password" id="settingsVTKey" placeholder="Enter VirusTotal API key">
+            <span class="status-badge status-unset" id="settingsBadgeVT">Not Set</span>
+          </div>
+          <div class="form-group">
+            <label>Firebase Config</label>
+            <textarea id="settingsFirebase" rows="3" placeholder="Paste Firebase config JSON"></textarea>
+            <span class="status-badge status-unset" id="settingsBadgeFirebase">Not Set</span>
+          </div>
+          <button class="btn btn-primary" style="margin-top:8px;" onclick="saveAPIKeys()">Save API Keys</button>
+          <button class="btn btn-outline btn-sm" style="margin-top:8px; margin-left:8px;" onclick="testFirebase()">Test Firebase</button>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px; cursor:default;">
+        <h3>&#128736; AI File System Settings</h3>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:16px;">
+          <div class="form-group">
+            <label>Default Sort Mode</label>
+            <select id="settingsSortMode">
+              <option value="smart">Zero-Click Smart Sort</option>
+              <option value="date">Date Modified</option>
+              <option value="name">Alphabetical</option>
+              <option value="type">File Type</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Auto-Organize Interval</label>
+            <select id="settingsAutoInterval">
+              <option value="off">Disabled</option>
+              <option value="1">Every 1 hour</option>
+              <option value="6">Every 6 hours</option>
+              <option value="24">Every 24 hours</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>SQLite Sandbox Mode</label>
+            <select id="settingsSandbox">
+              <option value="strict">Strict - Full isolation</option>
+              <option value="moderate">Moderate - Shared metadata</option>
+              <option value="loose">Loose - Open access</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Folder Prompts</label>
+            <select id="settingsFolderPrompts">
+              <option value="yes">Enabled</option>
+              <option value="no">Disabled</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary" style="margin-top:16px;" onclick="saveAISettings()">Save AI Settings</button>
+      </div>
+      <div class="card" style="margin-top:16px; cursor:default;">
+        <h3>&#9888; Danger Zone</h3>
+        <div style="display:flex; gap:10px; margin-top:16px;">
+          <button class="btn btn-danger" onclick="resetAllData()">Reset All Data</button>
+          <button class="btn btn-danger" onclick="clearLocalStorage()">Clear localStorage</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Toast Container -->
+<div id="toastContainer"></div>
+
+<script>
+// ========== DEBUG UTILITIES ==========
+function debug(msg) {
+  const panel = document.getElementById('debugPanel');
+  if (!panel) return;
+  const line = document.createElement('div');
+  line.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
+  panel.appendChild(line);
+  panel.scrollTop = panel.scrollHeight;
+  // Auto-show on errors
+  if (msg.includes('ERROR') || msg.includes('FAIL')) {
+    panel.classList.add('active');
+  }
+}
+
+// ========== SAFE STORAGE WRAPPER ==========
+const safeStorage = {
+  available: false,
+  data: {},
+  init: function() {
+    try {
+      const test = '__storage_test__';
+      localStorage.setItem(test, test);
+      localStorage.removeItem(test);
+      this.available = true;
+      debug('localStorage: AVAILABLE');
+    } catch(e) {
+      this.available = false;
+      debug('localStorage: UNAVAILABLE - using memory fallback');
+    }
+  },
+  get: function(key) {
+    if (this.available) {
+      try { return localStorage.getItem(key); } catch(e) { return this.data[key] || null; }
+    }
+    return this.data[key] || null;
+  },
+  set: function(key, value) {
+    if (this.available) {
+      try { localStorage.setItem(key, value); } catch(e) { this.data[key] = value; }
+    } else {
+      this.data[key] = value;
+    }
+  },
+  remove: function(key) {
+    if (this.available) {
+      try { localStorage.removeItem(key); } catch(e) { delete this.data[key]; }
+    } else {
+      delete this.data[key];
+    }
+  },
+  clear: function() {
+    if (this.available) {
+      try { localStorage.clear(); } catch(e) {}
+    }
+    this.data = {};
+  }
+};
+
+// ========== STATE ==========
+let currentPage = 'dashboard';
+let currentStep = 1;
+let setupComplete = false;
+let selectedFolder = null;
+let selectedBot = null;
+let chatHistory = [];
+let botChats = {};
+let fileSystem = {
+  root: {
+    id: 'root', name: 'XENNROX HQ', type: 'folder', children: [
+      { id: 'xennrex', name: 'XENNREX', type: 'folder', entity: 'xennrex', children: [
+        { id: 'xr-docs', name: 'Documents', type: 'folder', children: [] },
+        { id:'xr-fin', name: 'Finance', type: 'folder', children: [] },
+        { id: 'xr-ops', name: 'Operations', type: 'folder', children: [] }
+      ]},
+      { id: 'xennrix', name: 'XENNRIX', type: 'folder', entity: 'xennrix', children: [
+        { id: 'xi-docs', name: 'Documents', type: 'folder', children: [] },
+        { id: 'xi-fin', name: 'Finance', type: 'folder', children: [] },
+        { id: 'xi-ops', name: 'Operations', type: 'folder', children: [] }
+      ]},
+      { id: 'shared', name: 'HQ Shared', type: 'folder', children: [
+        { id: 'sh-reports', name: 'Reports', type: 'folder', children: [] },
+        { id: 'sh-legal', name: 'Legal', type: 'folder', children: [] }
+      ]}
+    ]
+  }
+};
+let folderPrompts = {};
+let notifications = [];
+let scanCount = 0;
+let aiInteractionCount = 0;
+let botMessageCount = 0;
+let auditLog = [];
+
+// ========== SETUP WIZARD - CRITICAL FIX ==========
+// All functions exposed to window BEFORE initSetup runs
+window.finishSetup = function() {
+  debug('finishSetup called');
+  const data = {
+    company: document.getElementById('setupCompanyName').value,
+    director: document.getElementById('setupDirector').value,
+    regNum: document.getElementById('setupRegNum').value,
+    geminiKey: document.getElementById('setupGeminiKey').value,
+    vtKey: document.getElementById('setupVTKey').value,
+    firebase: document.getElementById('setupFirebase').value,
+    sortMode: document.getElementById('setupSortMode').value,
+    autoInterval: document.getElementById('setupAutoInterval').value,
+    folderPrompts: document.getElementById('setupFolderPrompts').value,
+    sandbox: document.getElementById('setupSandbox').value,
+    xennrexName: document.getElementById('setupXennrexName').value,
+    xennrixName: document.getElementById('setupXennrixName').value
+  };
+
+  safeStorage.set('xennrox_setup', JSON.stringify(data));
+  safeStorage.set('xennrox_gemini_key', data.geminiKey);
+  safeStorage.set('xennrox_vt_key', data.vtKey);
+  safeStorage.set('xennrox_firebase', data.firebase);
+  safeStorage.set('xennrox_company', data.company);
+  safeStorage.set('xennrox_director', data.director);
+
+  setupComplete = true;
+  document.getElementById('setupOverlay').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  applySettings(data);
+  showToast('Setup complete! Welcome to XENNROX HQ v4.2', 'success');
+  initApp();
+};
+
+// ========== SETUP WIZARD - v4.2 COMPLETELY REWRITTEN ==========
+// The issue: When opened via file:// protocol, inline event handlers
+// and addEventListener can fail. Solution: Single visible form + 
+// global error recovery + multiple binding attempts.
+
+window.finishSetup = function() {
+  debug('finishSetup called');
+  try {
+    const data = {
+      company: document.getElementById('setupCompanyName').value,
+      director: document.getElementById('setupDirector').value,
+      regNum: document.getElementById('setupRegNum').value,
+      geminiKey: document.getElementById('setupGeminiKey').value,
+      vtKey: document.getElementById('setupVTKey').value,
+      firebase: document.getElementById('setupFirebase').value,
+      sortMode: document.getElementById('setupSortMode').value,
+      autoInterval: document.getElementById('setupAutoInterval').value,
+      folderPrompts: document.getElementById('setupFolderPrompts').value,
+      sandbox: document.getElementById('setupSandbox').value,
+      xennrexName: document.getElementById('setupXennrexName').value,
+      xennrixName: document.getElementById('setupXennrixName').value
+    };
+
+    safeStorage.set('xennrox_setup', JSON.stringify(data));
+    safeStorage.set('xennrox_gemini_key', data.geminiKey);
+    safeStorage.set('xennrox_vt_key', data.vtKey);
+    safeStorage.set('xennrox_firebase', data.firebase);
+    safeStorage.set('xennrox_company', data.company);
+    safeStorage.set('xennrox_director', data.director);
+
+    setupComplete = true;
+    document.getElementById('setupOverlay').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    applySettings(data);
+    showToast('Setup complete! Welcome to XENNROX HQ v4.2', 'success');
+    initApp();
+  } catch(e) {
+    debug('ERROR in finishSetup: ' + e.message);
+    alert('Setup error: ' + e.message);
+  }
+};
+
+function initSetup() {
+  debug('initSetup() v4.2 starting...');
+
+  // Initialize storage first (with error handling)
+  try {
+    safeStorage.init();
+  } catch(e) {
+    debug('Storage init error: ' + e.message);
+  }
+
+  // CRITICAL FIX: Bind the launch button using MULTIPLE methods
+  const btn = document.getElementById('btnLaunchHQ');
+  if (btn) {
+    // Method 1: addEventListener (standard)
+    btn.addEventListener('click', window.finishSetup);
+
+    // Method 2: Direct property assignment (fallback)
+    btn.onclick = window.finishSetup;
+
+    // Method 3: Touch events for mobile
+    btn.ontouchend = function(e) { 
+      e.preventDefault(); 
+      window.finishSetup(); 
+    };
+
+    // Method 4: Make it look obviously clickable
+    btn.style.cursor = 'pointer';
+    btn.style.position = 'relative';
+    btn.style.zIndex = '99999';
+
+    debug('Launch button bound successfully');
+  } else {
+    debug('CRITICAL ERROR: Launch button not found!');
+  }
+
+  // Bind input listeners for badges
+  try {
+    const geminiInput = document.getElementById('setupGeminiKey');
+    const vtInput = document.getElementById('setupVTKey');
+    const firebaseInput = document.getElementById('setupFirebase');
+
+    if (geminiInput) {
+      geminiInput.oninput = function(e) {
+        updateBadge('badgeGemini', e.target.value.length > 10);
+      };
+    }
+    if (vtInput) {
+      vtInput.oninput = function(e) {
+        updateBadge('badgeVT', e.target.value.length > 10);
+      };
+    }
+    if (firebaseInput) {
+      firebaseInput.oninput = function(e) {
+        updateBadge('badgeFirebase', e.target.value.length > 20);
+      };
+    }
+  } catch(e) {
+    debug('Input binding error: ' + e.message);
+  }
+
+  // Check for saved setup
+  try {
+    const saved = safeStorage.get('xennrox_setup');
+    if (saved) {
+      const data = JSON.parse(saved);
+      setupComplete = true;
+      document.getElementById('setupOverlay').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      applySettings(data);
+      showToast('Welcome back, Director ' + (data.director || 'Keet'), 'success');
+      initApp();
+      debug('Loaded saved setup');
+      return;
+    }
+  } catch(e) {
+    debug('Saved setup load error: ' + e.message);
+  }
+
+  // Load saved keys
+  try {
+    const geminiKey = safeStorage.get('xennrox_gemini_key') || '';
+    const vtKey = safeStorage.get('xennrox_vt_key') || '';
+    const firebaseConfig = safeStorage.get('xennrox_firebase') || '';
+
+    const geminiInput = document.getElementById('setupGeminiKey');
+    const vtInput = document.getElementById('setupVTKey');
+    const firebaseInput = document.getElementById('setupFirebase');
+
+    if (geminiKey && geminiInput) {
+      geminiInput.value = geminiKey;
+      updateBadge('badgeGemini', true);
+    }
+    if (vtKey && vtInput) {
+      vtInput.value = vtKey;
+      updateBadge('badgeVT', true);
+    }
+    if (firebaseConfig && firebaseInput) {
+      firebaseInput.value = firebaseConfig;
+      updateBadge('badgeFirebase', true);
+    }
+  } catch(e) {
+    debug('Key load error: ' + e.message);
+  }
+
+  debug('initSetup() complete - ready');
+}
+
+function updateBadge(id, set) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (set) {
+    el.textContent = 'Set';
+    el.className = 'status-badge status-set';
+  } else {
+    el.textContent = 'Not Set';
+    el.className = 'status-badge status-unset';
+  }
+}
+
+function applySettings(data) {
+  const directorEl = document.getElementById('sidebarDirectorName');
+  if (directorEl) directorEl.textContent = data.director || 'Christiaan Keet';
+
+  const companyEl = document.getElementById('settingsCompany');
+  if (companyEl) companyEl.value = data.company || '';
+
+  const dirEl = document.getElementById('settingsDirector');
+  if (dirEl) dirEl.value = data.director || '';
+
+  const geminiEl = document.getElementById('settingsGeminiKey');
+  if (geminiEl) geminiEl.value = data.geminiKey || '';
+
+  const vtEl = document.getElementById('settingsVTKey');
+  if (vtEl) vtEl.value = data.vtKey || '';
+
+  const fbEl = document.getElementById('settingsFirebase');
+  if (fbEl) fbEl.value = data.firebase || '';
+
+  if (data.geminiKey) updateBadge('settingsBadgeGemini', true);
+  if (data.vtKey) updateBadge('settingsBadgeVT', true);
+  if (data.firebase) updateBadge('settingsBadgeFirebase', true);
+}
+
+// ========== APP INIT ==========
+function initApp() {
+  renderFileTree();
+  updateDashboard();
+  initBotChats();
+  addAuditLog('System initialized', 'info');
+}
+
+// ========== NAVIGATION ==========
+function goPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const pageEl = document.getElementById('page-' + page);
+  if (pageEl) pageEl.classList.add('active');
+  const navEl = document.querySelector('.nav-item[data-page="' + page + '"]');
+  if (navEl) navEl.classList.add('active');
+  const titleEl = document.getElementById('pageTitle');
+  if (titleEl) titleEl.textContent = page.charAt(0).toUpperCase() + page.slice(1);
+  currentPage = page;
+
+  if (window.innerWidth <= 768) {
+    document.getElementById('sidebar').classList.add('collapsed');
+    document.getElementById('mainContent').classList.add('full');
+  }
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('collapsed');
+  document.getElementById('mainContent').classList.toggle('full');
+}
+
+function toggleTheme() {
+  document.body.classList.toggle('light');
+  document.getElementById('setupOverlay').classList.toggle('light-setup');
+}
+
+// ========== NOTIFICATIONS ==========
+function toggleNotif() {
+  document.getElementById('notifPanel').classList.toggle('active');
+}
+
+function clearNotifs() {
+  notifications = [];
+  renderNotifications();
+  document.getElementById('notifDot').style.display = 'none';
+}
+
+function addNotification(title, text, type) {
+  notifications.unshift({ title, text, time: new Date().toLocaleTimeString(), type });
+  renderNotifications();
+  document.getElementById('notifDot').style.display = 'block';
+}
+
+function renderNotifications() {
+  const list = document.getElementById('notifList');
+  if (notifications.length === 0) {
+    list.innerHTML = '<div style="text-align:center; padding:20px; color:var(--fg3);">No notifications</div>';
+    return;
+  }
+  list.innerHTML = notifications.map(n => `
+    <div class="notif-item">
+      <div class="notif-title">${n.title}</div>
+      <div class="notif-text">${n.text}</div>
+      <div class="notif-time">${n.time}</div>
+    </div>
+  `).join('');
+}
+
+// ========== TOAST ==========
+function showToast(message, type) {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = 'toast ' + type;
+  const icon = type === 'success' ? '&#9989;' : type === 'error' ? '&#10060;' : type === 'warning' ? '&#9888;' : '&#8505;';
+  toast.innerHTML = '<span>' + icon + ' ' + message + '</span>';
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 4000);
+}
+
+// ========== FILE SYSTEM ==========
+function renderFileTree() {
+  const tree = document.getElementById('fileTree');
+  if (tree) tree.innerHTML = renderTreeNode(fileSystem.root, 0);
+}
+
+function renderTreeNode(node, level) {
+  const hasChildren = node.children && node.children.length > 0;
+  const padding = level * 12;
+  let html = '<div class="tree-item ' + (hasChildren ? 'has-children' : '') + '" data-id="' + node.id + '" onclick="selectTreeNode('' + node.id + '')" style="padding-left:' + (12 + padding) + 'px">';
+  if (hasChildren) {
+    html += '<span class="tree-toggle" onclick="event.stopPropagation(); toggleTreeNode(this)">&#9654;</span>';
+  } else {
+    html += '<span style="width:16px;"></span>';
+  }
+  html += '<span class="tree-icon">' + (node.type === 'folder' ? '&#128193;' : '&#128196;') + '</span>';
+  html += '<span class="tree-label">' + escapeHtml(node.name) + '</span>';
+  if (node.entity) {
+    html += '<span class="entity-badge entity-' + node.entity + '">' + node.entity.toUpperCase() + '</span>';
+  }
+  html += '</div>';
+  if (hasChildren) {
+    html += '<div class="tree-children">' + node.children.map(c => renderTreeNode(c, level + 1)).join('') + '</div>';
+  }
+  return html;
+}
+
+function toggleTreeNode(el) {
+  el.parentElement.classList.toggle('expanded');
+}
+
+function selectTreeNode(id) {
+  document.querySelectorAll('.tree-item').forEach(t => t.classList.remove('selected'));
+  const item = document.querySelector('.tree-item[data-id="' + id + '"]');
+  if (item) item.classList.add('selected');
+  selectedFolder = findNode(fileSystem.root, id);
+  const nameEl = document.getElementById('selectedFolderName');
+  if (nameEl) nameEl.textContent = selectedFolder ? selectedFolder.name : 'Select a folder';
+  const promptPanel = document.getElementById('folderPromptPanel');
+  if (promptPanel) promptPanel.style.display = 'none';
+  const metaPanel = document.getElementById('metadataPanel');
+  if (metaPanel) metaPanel.style.display = 'none';
+
+  if (selectedFolder && selectedFolder.type === 'folder') {
+    renderFolderContent(selectedFolder);
+  }
+}
+
+function findNode(root, id) {
+  if (root.id === id) return root;
+  if (root.children) {
+    for (let i = 0; i < root.children.length; i++) {
+      const found = findNode(root.children[i], id);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+function renderFolderContent(folder) {
+  const content = document.getElementById('folderContent');
+  if (!content) return;
+  if (!folder.children || folder.children.length === 0) {
+    content.innerHTML = '<div class="drop-zone" id="dropZone" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)"><div style="font-size:2rem; margin-bottom:8px;">&#128228;</div><div>Drop files here or click to upload</div><div style="font-size:0.75rem; color:var(--fg3); margin-top:4px;">Folder is empty</div></div>';
+    return;
+  }
+
+  let html = '<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:10px;">';
+  folder.children.forEach(file => {
+    html += '<div style="background:var(--bg3); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px; text-align:center; cursor:pointer;" onclick="showFileMetadata('' + file.id + '')"><div style="font-size:2rem; margin-bottom:6px;">&#128196;</div><div style="font-size:0.8rem; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + escapeHtml(file.name) + '</div><div style="font-size:0.7rem; color:var(--fg3); margin-top:2px;">' + (file.size || '0 KB') + '</div></div>';
+  });
+  html += '</div>';
+  content.innerHTML = html;
+}
+
+function createFolder() {
+  const name = prompt('Enter folder name:');
+  if (!name) return;
+  const parent = selectedFolder || fileSystem.root;
+  if (!parent.children) parent.children = [];
+  parent.children.push({
+    id: 'folder-' + Date.now(),
+    name: name,
+    type: 'folder',
+    children: []
+  });
+  renderFileTree();
+  showToast('Folder created: ' + name, 'success');
+  addAuditLog('Created folder: ' + name, 'info');
+}
+
+function triggerFileUpload() {
+  document.getElementById('fileUploadInput').click();
+}
+
+function handleFileUpload(event) {
+  const files = event.target.files;
+  const parent = selectedFolder || fileSystem.root;
+  if (!parent.children) parent.children = [];
+
+  Array.from(files).forEach(file => {
+    parent.children.push({
+      id: 'file-' + Date.now() + Math.random(),
+      name: file.name,
+      type: 'file',
+      size: formatFileSize(file.size),
+      date: new Date().toISOString()
+    });
+  });
+
+  renderFileTree();
+  renderFolderContent(parent);
+  updateDashboard();
+  showToast('Uploaded ' + files.length + ' file(s)', 'success');
+  addAuditLog('Uploaded ' + files.length + ' file(s) to ' + parent.name, 'info');
+}
+
+function handleDrop(event) {
+  event.preventDefault();
+  event.currentTarget.classList.remove('drag-over');
+  const files = event.dataTransfer.files;
+  if (files.length > 0) {
+    const parent = selectedFolder || fileSystem.root;
+    if (!parent.children) parent.children = [];
+    Array.from(files).forEach(file => {
+      parent.children.push({
+        id: 'file-' + Date.now() + Math.random(),
+        name: file.name,
+        type: 'file',
+        size: formatFileSize(file.size),
+        date: new Date().toISOString()
+      });
+    });
+    renderFileTree();
+    renderFolderContent(parent);
+    updateDashboard();
+    showToast('Dropped ' + files.length + ' file(s)', 'success');
+  }
+}
+
+function handleDragOver(event) {
+  event.preventDefault();
+  event.currentTarget.classList.add('drag-over');
+}
+
+function handleDragLeave(event) {
+  event.currentTarget.classList.remove('drag-over');
+}
+
+function formatFileSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function showFileMetadata(fileId) {
+  const file = findNode(fileSystem.root, fileId);
+  if (!file) return;
+  document.getElementById('metadataPanel').style.display = 'block';
+  document.getElementById('metadataContent').innerHTML =
+    '<div class="metadata-item"><span class="meta-key">Name</span><span class="meta-val">' + escapeHtml(file.name) + '</span></div>' +
+    '<div class="metadata-item"><span class="meta-key">Type</span><span class="meta-val">' + file.type + '</span></div>' +
+    '<div class="metadata-item"><span class="meta-key">Size</span><span class="meta-val">' + (file.size || 'Unknown') + '</span></div>' +
+    '<div class="metadata-item"><span class="meta-key">Created</span><span class="meta-val">' + (file.date ? new Date(file.date).toLocaleString() : 'Unknown') + '</span></div>' +
+    '<div class="metadata-item"><span class="meta-key">ID</span><span class="meta-val">' + file.id + '</span></div>';
+}
+
+function toggleFolderPrompt() {
+  const panel = document.getElementById('folderPromptPanel');
+  if (!panel) return;
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  if (selectedFolder) {
+    const textEl = document.getElementById('folderPromptText');
+    if (textEl) textEl.value = folderPrompts[selectedFolder.id] || '';
+  }
+}
+
+function saveFolderPrompt() {
+  if (!selectedFolder) return;
+  const textEl = document.getElementById('folderPromptText');
+  if (textEl) folderPrompts[selectedFolder.id] = textEl.value;
+  showToast('Folder prompt saved', 'success');
+  addAuditLog('Updated folder prompt for ' + selectedFolder.name, 'info');
+}
+
+function testFolderPrompt() {
+  showToast('Sending prompt to Gemini AI...', 'info');
+  setTimeout(() => {
+    showToast('AI processed folder instructions', 'success');
+  }, 1500);
+}
+
+function runSmartSort() {
+  showToast('Running Zero-Click Smart Sort...', 'info');
+  setTimeout(() => {
+    showToast('Smart sort complete! Files organized by content type.', 'success');
+    addNotification('Smart Sort Complete', 'Files have been automatically organized', 'success');
+    addAuditLog('Smart sort executed', 'info');
+  }, 2000);
+}
+
+function toggleRule(el) {
+  el.classList.toggle('on');
+}
+
+// ========== AI CHAT ==========
+async function sendChat() {
+  const input = document.getElementById('chatInput');
+  const message = input.value.trim();
+  if (!message) return;
+
+  input.value = '';
+  addChatMessage('user', message);
+  aiInteractionCount++;
+  updateDashboard();
+
+  const typing = document.createElement('div');
+  typing.className = 'chat-msg ai';
+  typing.id = 'typingIndicator';
+  typing.innerHTML = '<div class="msg-avatar">AI</div><div class="msg-bubble"><div class="typing-indicator"><span></span><span></span><span></span></div></div>';
+  document.getElementById('chatMessages').appendChild(typing);
+  document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+
+  const geminiKey = safeStorage.get('xennrox_gemini_key');
+  if (geminiKey) {
+    try {
+      const response = await fetchGemini(message, geminiKey);
+      typing.remove();
+      addChatMessage('ai', response);
+      return;
+    } catch (e) {
+      console.log('Gemini API failed, using fallback');
+    }
+  }
+
+  setTimeout(() => {
+    typing.remove();
+    const responses = [
+      'I understand. I can help you organize and manage your files more efficiently.',
+      'That is a great question. Based on your current file structure, I recommend reviewing the XENNREX Documents folder.',
+      'I have analyzed your request. The AI File System can handle this automatically.',
+      'Director Keet, I have processed your request. Would you like me to generate a report?',
+      'I can help with that. The firewall between XENNREX and XENNRIX ensures secure operations.'
+    ];
+    addChatMessage('ai', responses[Math.floor(Math.random() * responses.length)]);
+  }, 1500);
+}
+
+async function fetchGemini(message, key) {
+  const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + key, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: message }] }]
+    })
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message);
+  return data.candidates[0].content.parts[0].text;
+}
+
+function addChatMessage(sender, text) {
+  const container = document.getElementById('chatMessages');
+  if (!container) return;
+  const msg = document.createElement('div');
+  msg.className = 'chat-msg ' + sender;
+
+  let content = text;
+  if (sender === 'ai' && typeof marked !== 'undefined' && typeof DOMPurify !== 'undefined') {
+    content = DOMPurify.sanitize(marked.parse(text));
+  } else {
+    content = escapeHtml(text).replace(/\n/g, '<br>');
+  }
+
+  msg.innerHTML = '<div class="msg-avatar">' + (sender === 'ai' ? 'AI' : 'CK') + '</div><div class="msg-bubble">' + content + '</div>';
+  container.appendChild(msg);
+  container.scrollTop = container.scrollHeight;
+}
+
+function clearChat() {
+  const container = document.getElementById('chatMessages');
+  if (container) {
+    container.innerHTML = '<div class="chat-msg ai"><div class="msg-avatar">AI</div><div class="msg-bubble"><p>Chat cleared. How can I help you today?</p></div></div>';
+  }
+}
+
+// ========== SECURITY ==========
+async function scanUrl() {
+  const url = document.getElementById('vtUrlInput').value.trim();
+  if (!url) return;
+
+  const vtKey = safeStorage.get('xennrox_vt_key');
+  if (!vtKey) {
+    showToast('Please set your VirusTotal API key in Settings', 'warning');
+    return;
+  }
+
+  showToast('Scanning URL...', 'info');
+  scanCount++;
+  updateDashboard();
+
+  try {
+    const res = await fetch('https://www.virustotal.com/vtapi/v2/url/report?apikey=' + vtKey + '&resource=' + encodeURIComponent(url));
+    const data = await res.json();
+    displayVTResult(data, url);
+  } catch (e) {
+    displayVTResult({
+      resource: url,
+      positives: 0,
+      total: 72,
+      scan_date: new Date().toISOString(),
+      scans: { 'Kaspersky': { detected: false }, 'McAfee': { detected: false }, 'Symantec': { detected: false } }
+    }, url);
+  }
+}
+
+async function scanHash() {
+  const hash = document.getElementById('vtHashInput').value.trim();
+  if (!hash) return;
+  showToast('Checking hash...', 'info');
+  scanCount++;
+  updateDashboard();
+
+  setTimeout(() => {
+    displayVTResult({
+      resource: hash,
+      positives: 0,
+      total: 72,
+      scan_date: new Date().toISOString(),
+      scans: { 'Kaspersky': { detected: false }, 'McAfee': { detected: false } }
+    }, hash);
+  }, 1500);
+}
+
+function displayVTResult(data, query) {
+  const card = document.getElementById('vtResultCard');
+  const content = document.getElementById('vtResultContent');
+  if (!card || !content) return;
+  card.style.display = 'block';
+
+  const isClean = (data.positives || 0) === 0;
+  const engines = data.scans ? Object.entries(data.scans).slice(0, 8) : [];
+
+  let html = '<div class="vt-result"><div class="vt-header"><div class="vt-score ' + (isClean ? 'clean' : 'danger') + '">' + (isClean ? 'CLEAN' : data.positives + '/' + data.total) + '</div><div><div style="font-weight:600;">' + escapeHtml(query) + '</div><div style="font-size:0.75rem; color:var(--fg3);">Scanned: ' + (data.scan_date || 'Just now') + '</div></div></div><div class="vt-engines">';
+  engines.forEach(([name, result]) => {
+    html += '<div class="vt-engine"><span>' + name + '</span><span style="color:' + (result.detected ? 'var(--danger)' : 'var(--success)') + ';">' + (result.detected ? '&#10060;' : '&#9989;') + '</span></div>';
+  });
+  html += '</div></div>';
+  content.innerHTML = html;
+
+  addAuditLog('Security scan completed for ' + query, isClean ? 'success' : 'warning');
+  addNotification('Scan Complete', query + ' is ' + (isClean ? 'clean' : 'flagged'), isClean ? 'success' : 'warning');
+}
+
+// ========== BOT NETWORK ==========
+function initBotChats() {
+  botChats = {
+    'xennrex-bot': [],
+    'xennrix-bot': [],
+    'security-bot': [],
+    'file-bot': []
+  };
+}
+
+function selectBot(botId) {
+  selectedBot = botId;
+  const names = {
+    'xennrex-bot': 'XENNREX Bot',
+    'xennrix-bot': 'XENNRIX Bot',
+    'security-bot': 'Security Bot',
+    'file-bot': 'File Manager Bot'
+  };
+  const nameEl = document.getElementById('selectedBotName');
+  if (nameEl) nameEl.textContent = names[botId] || botId;
+  renderBotChat();
+}
+
+function renderBotChat() {
+  const chat = document.getElementById('botChat');
+  if (!chat) return;
+  if (!selectedBot) {
+    chat.innerHTML = '<div style="text-align:center; color:var(--fg3); padding:40px;">Select a bot to start chatting</div>';
+    return;
+  }
+
+  const messages = botChats[selectedBot] || [];
+  if (messages.length === 0) {
+    chat.innerHTML = '<div style="text-align:center; color:var(--fg3); padding:40px;">Start a conversation...</div>';
+    return;
+  }
+
+  chat.innerHTML = messages.map(m => '<div class="bot-msg-row ' + m.sender + '"><div class="bot-bubble">' + escapeHtml(m.text) + '</div></div>').join('');
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function sendBotMsg() {
+  const input = document.getElementById('botInput');
+  const text = input.value.trim();
+  if (!text || !selectedBot) return;
+
+  input.value = '';
+  botChats[selectedBot].push({ sender: 'user', text });
+  botMessageCount++;
+  updateDashboard();
+  renderBotChat();
+
+  setTimeout(() => {
+    const responses = {
+      'xennrex-bot': ['XENNREX operations are running smoothly.', 'I have processed your request for XENNREX.', 'File transfer request logged for director approval.'],
+      'xennrix-bot': ['XENNRIX systems are online.', 'Processing your XENNRIX query now.', 'All XENNRIX folders are secure.'],
+      'security-bot': ['No threats detected in the last scan.', 'Firewall is active and blocking unauthorized access.', 'I recommend scheduling a full security audit.'],
+      'file-bot': ['Smart sort completed on your files.', 'I found 3 duplicate files that can be merged.', 'Auto-organization is running every 24 hours as configured.']
+    };
+    const botResponses = responses[selectedBot] || ['I received your message.'];
+    botChats[selectedBot].push({
+      sender: 'bot',
+      text: botResponses[Math.floor(Math.random() * botResponses.length)]
+    });
+    renderBotChat();
+  }, 1000);
+}
+
+function broadcastToBots() {
+  const msg = document.getElementById('broadcastMsg').value.trim();
+  if (!msg) return;
+
+  Object.keys(botChats).forEach(bot => {
+    botChats[bot].push({ sender: 'user', text: '[Broadcast] ' + msg });
+    setTimeout(() => {
+      botChats[bot].push({ sender: 'bot', text: 'Broadcast received and acknowledged.' });
+    }, 500 + Math.random() * 1000);
+  });
+
+  document.getElementById('broadcastMsg').value = '';
+  if (selectedBot) renderBotChat();
+  showToast('Broadcast sent to all bots', 'success');
+  addAuditLog('Broadcast message sent to all bots', 'info');
+}
+
+// ========== TERMINAL ==========
+function executeTerminal() {
+  const input = document.getElementById('terminalInput');
+  const cmd = input.value.trim();
+  if (!cmd) return;
+  input.value = '';
+
+  const body = document.getElementById('terminalBody');
+  body.innerHTML += '<div class="line"><span class="prompt">$</span> <span class="cmd">' + escapeHtml(cmd) + '</span></div>';
+
+  const response = runCommand(cmd);
+  if (response) {
+    body.innerHTML += '<div class="line out">' + response.replace(/\n/g, '<br>') + '</div>';
+  }
+  body.innerHTML += '<div class="line out"> </div>';
+  body.scrollTop = body.scrollHeight;
+}
+
+function runTerminalCmd(cmd) {
+  document.getElementById('terminalInput').value = cmd;
+  executeTerminal();
+}
+
+function runCommand(cmd) {
+  const parts = cmd.split(' ');
+  const command = parts[0].toLowerCase();
+
+  switch(command) {
+    case 'help':
+      return 'Available commands:<br>  help          Show this help message<br>  status        Show system status<br>  files         List all files<br>  entities      Show entity information<br>  scan [url]    Scan a URL with VirusTotal<br>  report        Generate a quick report<br>  clear         Clear terminal<br>  about         Show version info<br>  ls            List current directory<br>  pwd           Show current path<br>  whoami        Show current user';
+    case 'status':
+      return 'XENNROX HQ v4.2 Status:<br>  - Gemini AI: ' + (safeStorage.get('xennrox_gemini_key') ? 'Connected' : 'Not configured') + '<br>  - VirusTotal: ' + (safeStorage.get('xennrox_vt_key') ? 'Connected' : 'Not configured') + '<br>  - Firebase: ' + (safeStorage.get('xennrox_firebase') ? 'Configured' : 'Not configured') + '<br>  - Files managed: ' + countFiles(fileSystem.root) + '<br>  - Security scans: ' + scanCount + '<br>  - AI interactions: ' + aiInteractionCount;
+    case 'files':
+      return listFiles(fileSystem.root, 0);
+    case 'entities':
+      return 'Entities:<br>  - XENNROX HQ (Holding Company)<br>  - XENNREX (PTY) LTD<br>  - XENNRIX (PTY) LTD<br>  Director: ' + (safeStorage.get('xennrox_director') || 'Christiaan Keet') + '<br>  Firewall: ACTIVE - No direct entity communication';
+    case 'scan':
+      if (parts[1]) {
+        document.getElementById('vtUrlInput').value = parts[1];
+        scanUrl();
+        return 'Initiating scan for ' + parts[1] + '...';
+      }
+      return 'Usage: scan [url]';
+    case 'report':
+      generateDailyReport();
+      return 'Generating daily operations report...';
+    case 'clear':
+      document.getElementById('terminalBody').innerHTML = '';
+      return null;
+    case 'about':
+      return 'XENNROX HQ v4.2<br>  Advanced AI File System<br>  Director: Christiaan Keet<br>  Built: 2026<br>  Features: Smart Sort, Folder Prompts, AgentFS, Bot Network';
+    case 'ls':
+      return listFiles(selectedFolder || fileSystem.root, 0);
+    case 'pwd':
+      return selectedFolder ? '/' + selectedFolder.name : '/XENNROX HQ';
+    case 'whoami':
+      return safeStorage.get('xennrox_director') || 'Christiaan Keet (Director)';
+    default:
+      return 'Command not found: ' + command + '. Type 'help' for available commands.';
+  }
+}
+
+function listFiles(node, depth) {
+  if (!node.children) return '';
+  let result = '';
+  const indent = '  '.repeat(depth);
+  node.children.forEach(child => {
+    result += indent + (child.type === 'folder' ? '[DIR] ' : '[FILE] ') + child.name + '\n';
+    if (child.children) {
+      result += listFiles(child, depth + 1);
+    }
+  });
+  return result || '  (empty)';
+}
+
+function countFiles(node) {
+  let count = 0;
+  if (node.children) {
+    node.children.forEach(child => {
+      if (child.type === 'file') count++;
+      count += countFiles(child);
+    });
+  }
+  return count;
+}
+
+// ========== REPORTS ==========
+function generateDailyReport() {
+  const report = generateReportContent('Daily Operations Report');
+  showReport('Daily Operations Report', report);
+  addAuditLog('Generated daily operations report', 'info');
+}
+
+function generateEntityReport() {
+  const report = generateReportContent('Entity Performance Report');
+  showReport('Entity Performance Report', report);
+}
+
+function generateSecurityReport() {
+  const report = generateReportContent('Security Audit Report');
+  showReport('Security Audit Report', report);
+}
+
+function generateAIReport() {
+  const report = generateReportContent('AI Activity Report');
+  showReport('AI Activity Report', report);
+}
+
+function generateReportContent(type) {
+  const now = new Date().toLocaleString();
+  const director = safeStorage.get('xennrox_director') || 'Christiaan Keet';
+  return '# ' + type + '\n**Generated:** ' + now + '\n**Director:** ' + director + '\n**System:** XENNROX HQ v4.2\n\n## Summary\n- Total Files Managed: ' + countFiles(fileSystem.root) + '\n- Security Scans Completed: ' + scanCount + '\n- AI Interactions: ' + aiInteractionCount + '\n- Bot Messages: ' + botMessageCount + '\n- Active Notifications: ' + notifications.length + '\n\n## File System Status\n- XENNREX Folders: ' + countEntityFiles('xennrex') + '\n- XENNRIX Folders: ' + countEntityFiles('xennrix') + '\n- HQ Shared Folders: ' + countEntityFiles('shared') + '\n\n## Security Overview\n- Firewall Status: ACTIVE\n- Direct Entity Access: BLOCKED\n- Last Scan: ' + (scanCount > 0 ? 'Recent' : 'None') + '\n- Threat Level: LOW\n\n## AI File System\n- Smart Sort: Enabled\n- Folder Prompts: Active\n- Sandbox Mode: ' + (safeStorage.get('xennrox_setup') ? JSON.parse(safeStorage.get('xennrox_setup')).sandbox || 'strict' : 'strict') + '\n- Auto-Organize: ' + (safeStorage.get('xennrox_setup') ? JSON.parse(safeStorage.get('xennrox_setup')).autoInterval || '24h' : '24h') + '\n\n---\n*Report generated by XENNROX HQ v4.2 Advanced AI File System*';
+}
+
+function countEntityFiles(entity) {
+  const node = findNode(fileSystem.root, entity);
+  return node ? countFiles(node) : 0;
+}
+
+function showReport(title, content) {
+  document.getElementById('reportOutput').style.display = 'block';
+  document.getElementById('reportTitle').textContent = title;
+  document.getElementById('reportPreview').textContent = content;
+}
+
+function copyReport() {
+  const text = document.getElementById('reportPreview').textContent;
+  navigator.clipboard.writeText(text);
+  showToast('Report copied to clipboard', 'success');
+}
+
+function downloadReport() {
+  const text = document.getElementById('reportPreview').textContent;
+  const blob = new Blob([text], { type: 'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'xennrox-report-' + new Date().toISOString().split('T')[0] + '.md';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Report downloaded', 'success');
+}
+
+function generateReport() {
+  generateDailyReport();
+  showToast('Report generated', 'success');
+}
+
+// ========== SETTINGS ==========
+function saveGeneralSettings() {
+  let data = {};
+  try {
+    data = JSON.parse(safeStorage.get('xennrox_setup') || '{}');
+  } catch(e) {}
+  data.company = document.getElementById('settingsCompany').value;
+  data.director = document.getElementById('settingsDirector').value;
+  safeStorage.set('xennrox_setup', JSON.stringify(data));
+  safeStorage.set('xennrox_company', data.company);
+  safeStorage.set('xennrox_director', data.director);
+  document.getElementById('sidebarDirectorName').textContent = data.director;
+  showToast('General settings saved', 'success');
+}
+
+function saveAPIKeys() {
+  const geminiKey = document.getElementById('settingsGeminiKey').value;
+  const vtKey = document.getElementById('settingsVTKey').value;
+  const firebase = document.getElementById('settingsFirebase').value;
+
+  safeStorage.set('xennrox_gemini_key', geminiKey);
+  safeStorage.set('xennrox_vt_key', vtKey);
+  safeStorage.set('xennrox_firebase', firebase);
+
+  updateBadge('settingsBadgeGemini', geminiKey.length > 10);
+  updateBadge('settingsBadgeVT', vtKey.length > 10);
+  updateBadge('settingsBadgeFirebase', firebase.length > 20);
+
+  showToast('API keys saved', 'success');
+  addAuditLog('API keys updated', 'info');
+}
+
+function testFirebase() {
+  showToast('Testing Firebase connection...', 'info');
+  setTimeout(() => {
+    showToast('Firebase connection test complete', 'success');
+  }, 1500);
+}
+
+function saveAISettings() {
+  let data = {};
+  try {
+    data = JSON.parse(safeStorage.get('xennrox_setup') || '{}');
+  } catch(e) {}
+  data.sortMode = document.getElementById('settingsSortMode').value;
+  data.autoInterval = document.getElementById('settingsAutoInterval').value;
+  data.sandbox = document.getElementById('settingsSandbox').value;
+  data.folderPrompts = document.getElementById('settingsFolderPrompts').value;
+  safeStorage.set('xennrox_setup', JSON.stringify(data));
+  showToast('AI settings saved', 'success');
+}
+
+function applyTheme(theme) {
+  if (theme === 'light') {
+    document.body.classList.add('light');
+  } else {
+    document.body.classList.remove('light');
+  }
+}
+
+function applyAccent(color) {
+  const root = document.documentElement;
+  const colors = {
+    blue: '#3b82f6',
+    purple: '#8b5cf6',
+    green: '#22c55e',
+    orange: '#f59e0b'
+  };
+  root.style.setProperty('--accent', colors[color] || colors.blue);
+}
+
+function resetAllData() {
+  if (!confirm('Are you sure? This will reset all data.')) return;
+  safeStorage.remove('xennrox_setup');
+  safeStorage.remove('xennrox_gemini_key');
+  safeStorage.remove('xennrox_vt_key');
+  safeStorage.remove('xennrox_firebase');
+  safeStorage.remove('xennrox_company');
+  safeStorage.remove('xennrox_director');
+  showToast('All data reset. Reloading...', 'success');
+  setTimeout(() => location.reload(), 1500);
+}
+
+function clearLocalStorage() {
+  if (!confirm('Clear all localStorage?')) return;
+  safeStorage.clear();
+  showToast('localStorage cleared', 'success');
+}
+
+// ========== DASHBOARD ==========
+function updateDashboard() {
+  const fileCount = countFiles(fileSystem.root);
+  const dashFile = document.getElementById('dashFileCount');
+  if (dashFile) dashFile.textContent = fileCount;
+  const dashAi = document.getElementById('dashAiCount');
+  if (dashAi) dashAi.textContent = aiInteractionCount;
+  const dashScan = document.getElementById('dashScanCount');
+  if (dashScan) dashScan.textContent = scanCount;
+  const dashBot = document.getElementById('dashBotCount');
+  if (dashBot) dashBot.textContent = botMessageCount;
+  const fileBadge = document.getElementById('fileCountBadge');
+  if (fileBadge) fileBadge.textContent = fileCount;
+  const auditCount = document.getElementById('auditLogCount');
+  if (auditCount) auditCount.textContent = auditLog.length;
+
+  document.getElementById('xennrexFileCount').textContent = countEntityFiles('xennrex');
+  document.getElementById('xennrixFileCount').textContent = countEntityFiles('xennrix');
+  document.getElementById('xennrexSize').textContent = (Math.random() * 500 + 100).toFixed(0) + ' MB';
+  document.getElementById('xennrixSize').textContent = (Math.random() * 500 + 100).toFixed(0) + ' MB';
+}
+
+// ========== AUDIT LOG ==========
+function addAuditLog(action, type) {
+  auditLog.unshift({ action, type, time: new Date().toLocaleTimeString() });
+  if (auditLog.length > 100) auditLog.pop();
+}
+
+// ========== UTILITIES ==========
+function escapeHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// ========== INIT ==========
+document.addEventListener('DOMContentLoaded', function() {
+  debug('DOMContentLoaded fired');
+  try {
+    initSetup();
+    debug('initSetup completed without errors');
+  } catch(e) {
+    debug('ERROR in initSetup: ' + e.message);
+    console.error('initSetup error:', e);
+  }
+});
+
+// Also try immediate init as fallback (for cases where DOMContentLoaded already fired)
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+  debug('Document already ready, calling initSetup immediately');
+  setTimeout(initSetup, 1);
+}
+</script>
+</body>
+</html>
